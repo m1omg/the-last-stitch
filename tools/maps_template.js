@@ -95,12 +95,12 @@ __ORCHARD__
     ]),
     spawn: px(11, 26),
     entities: [
-      { type: 'door', ...px(10, 29), w: 150, h: 80, to: { map: 'harbor', x: 44 * 32, y: 9 * 32 } },
+      { type: 'door', ...px(10, 29), w: 150, h: 80, to: { map: 'harbor', x: 44 * 32 + 16, y: 9 * 32 + 16 } },
       { type: 'save', ...px(7, 20) },
       { type: 'enemy', ...px(20, 22), encounter: 'orchard_easy', radius: 120 },
       { type: 'enemy', ...px(33, 25), encounter: 'orchard_pair', radius: 140 },
       { type: 'enemy', ...px(18, 12), encounter: 'orchard_pair', radius: 100 },
-      { type: 'enemy', ...px(36, 16), encounter: 'orchard_mixed', radius: 110 },
+      { type: 'enemy', ...px(39, 17), encounter: 'orchard_mixed', radius: 110 },
       { type: 'enemy', ...px(28, 9), encounter: 'orchard_sock', radius: 130 },
       { type: 'poi', id: 'coat_table', spr: 'spr_coat', ...px(37, 22), talk: 'coat_table', big: true },
       { type: 'item', ...px(6, 21), itemId: 'biscuit', n: 2, flag: 'orchard_biscuits' },
@@ -122,11 +122,11 @@ __SEA__
     ]),
     spawn: px(7, 7),
     entities: [
-      { type: 'door', ...px(6, 2), w: 180, h: 70, to: { map: 'harbor', x: 23 * 32, y: 28 * 32 } },
+      { type: 'door', ...px(6, 2), w: 180, h: 70, to: { map: 'harbor', x: 23 * 32 + 16, y: 28 * 32 + 16 } },
       { type: 'save', ...px(15, 12) },
       { type: 'enemy', ...px(12, 8), encounter: 'sea_pup', radius: 160, water: true },
       { type: 'enemy', ...px(26, 12), encounter: 'sea_pair', radius: 170, water: true },
-      { type: 'enemy', ...px(10, 16), encounter: 'sea_whistler', radius: 160, water: true },
+      { type: 'enemy', ...px(11, 15), encounter: 'sea_whistler', radius: 160, water: true },
       { type: 'enemy', ...px(26, 22), encounter: 'sea_pair', radius: 170, water: true },
       { type: 'npc', id: 'hollow_isle', spr: 'spr_hollow', ...px(6, 20), talk: 'hollow_isle' },
       { type: 'poi', id: 'whale', ...px(34, 8), talk: 'whale_stars', big: true },
@@ -148,7 +148,7 @@ __WHITE__
     ]),
     spawn: px(18, 28),
     entities: [
-      { type: 'door', ...px(18, 30), w: 140, h: 70, to: { map: 'harbor', x: 12 * 32, y: 15 * 32 } },
+      { type: 'door', ...px(18, 30), w: 140, h: 70, to: { map: 'harbor', x: 12 * 32 + 16, y: 15 * 32 + 16 } },
       { type: 'save', ...px(9, 24) },
       { type: 'trigger', id: 'white_enter', ...px(18, 26), w: 220, h: 220, once: true, script: 'white_enter' },
       { type: 'enemy', ...px(26, 22), encounter: 'white_unraveler', radius: 130 },
@@ -171,9 +171,9 @@ __WHITE__
     grid: grid([
 __LIGHTHOUSE__
     ]),
-    spawn: px(22, 27),
+    spawn: px(22, 26),
     entities: [
-      { type: 'door', ...px(18, 29), w: 150, h: 70, to: { map: 'harbor', x: 24 * 32, y: 14 * 32 } },
+      { type: 'door', ...px(18, 29), w: 150, h: 70, to: { map: 'harbor', x: 24 * 32 + 16, y: 14 * 32 + 16 } },
       { type: 'save', ...px(23, 26) },
       { type: 'trigger', id: 'lighthouse_enter', ...px(20, 27), w: 320, h: 130, once: true, script: 'lighthouse_enter' },
       { type: 'trigger', id: 'fog_fight', ...px(22, 3), w: 280, h: 150, once: true, cond: '!fog_done', script: 'fog_fight' },

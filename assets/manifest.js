@@ -43,9 +43,6 @@ export const IMAGES = {
   spr_savequilt: S('spr_savequilt', 220, 160),
 
   // battle sprites (party, seen from behind-ish / three-quarter)
-  bspr_poppy: S('bspr_poppy', 460, 460),
-  bspr_buttons: S('bspr_buttons', 460, 460),
-  bspr_captain: S('bspr_captain', 460, 460),
 
   // portraits
   por_poppy_neutral: P('por_poppy_neutral'), por_poppy_happy: P('por_poppy_happy'),

@@ -5,7 +5,7 @@ import { BAL, levelFromXp, xpForLevel } from './balance.js';
 export const PARTY_DEFS = {
   poppy: {
     id: 'poppy', name: 'Poppy',
-    spr: 'poppy', bspr: 'bspr_poppy', porBase: 'por_poppy',
+    spr: 'poppy', porBase: 'por_poppy',
     blipRate: 1.25,
     base: { hp: 34, ink: 10, grit: 6, guard: 5, zip: 7 },
     growth: { hp: 6, ink: 2.4, grit: 1.2, guard: 1.0, zip: 1.1 },
@@ -14,7 +14,7 @@ export const PARTY_DEFS = {
   },
   buttons: {
     id: 'buttons', name: 'Buttons',
-    spr: 'buttons', bspr: 'bspr_buttons', porBase: 'por_buttons',
+    spr: 'buttons', porBase: 'por_buttons',
     blipRate: 1.5,
     base: { hp: 40, ink: 8, grit: 8, guard: 4, zip: 9 },
     growth: { hp: 7, ink: 2.0, grit: 1.5, guard: 0.8, zip: 1.3 },
@@ -23,7 +23,7 @@ export const PARTY_DEFS = {
   },
   captain: {
     id: 'captain', name: 'The Captain',
-    spr: 'captain', bspr: 'bspr_captain', porBase: 'por_captain',
+    spr: 'captain', porBase: 'por_captain',
     blipRate: 0.85,
     base: { hp: 36, ink: 14, grit: 5, guard: 7, zip: 6 },
     growth: { hp: 6, ink: 3.0, grit: 1.0, guard: 1.2, zip: 0.9 },

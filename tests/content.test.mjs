@@ -101,7 +101,6 @@ for (const enc of Object.values(ENCOUNTERS)) for (const eid of enc) if (!ENEMIES
 for (const [pid, def] of Object.entries(PARTY_DEFS)) {
   for (const ids of Object.values(def.skills)) for (const s of ids) if (!SKILLS[s]) err(`party ${pid}: skill '${s}' missing`);
   for (const dir of ['front', 'back', 'side']) if (!IMAGES[`spr_${pid}_${dir}`]) err(`party ${pid}: sprite ${dir} missing`);
-  if (!IMAGES[def.bspr]) err(`party ${pid}: battle sprite missing`);
   if (!IMAGES[`${def.porBase}_neutral`]) err(`party ${pid}: neutral portrait missing`);
   if (!MEMORIES[pid]?.length) err(`party ${pid}: no Remind memories`);
 }

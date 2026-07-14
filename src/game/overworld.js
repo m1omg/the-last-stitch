@@ -19,6 +19,11 @@ import { ShopUI } from './shop.js';
 
 const SPEED = 175, RUN_MULT = 1.65;
 const CELL = 32;
+// Sprites are drawn bottom-anchored ~this many px below their logical y (see
+// the draw calls). Collision samples where the feet APPEAR, not the raw y —
+// otherwise feet sink into walls below and stop short of walls above.
+const FEET = 26;
+const ENEMY_FEET = 24;
 
 export class OverworldScene {
   constructor(game, mapId, spawn = null) {
@@ -38,6 +43,8 @@ export class OverworldScene {
     this.world = { w: 1536, h: 1024 };
     const sp = this.spawnOverride || map.spawn;
     this.px = sp.x; this.py = sp.y;
+    // stale saves / bad overrides must never strand the player inside a wall
+    if (!this.boxFree(this.px, this.py)) { this.px = map.spawn.x; this.py = map.spawn.y; }
     this.facing = 'front';
     this.moving = false;
     this.walkT = 0;
@@ -73,20 +80,28 @@ export class OverworldScene {
   solidAt(x, y) {
     if (x < 0 || y < 0 || x >= this.world.w || y >= this.world.h) return true;
     const c = this.map.grid[Math.floor(y / CELL)]?.[Math.floor(x / CELL)];
-    if (c === '#' || c === 'T' || c === 'B') return true;
+    if (c === '#') return true;
     if (c === '~') return !this.map.boat;
     return false;
   }
 
+  // feet box: 24×11 around the visible feet; all four corners sampled so
+  // diagonal movement can't clip a corner cell (box < cell, corners suffice)
   boxFree(x, y) {
-    const hw = 12, hh = 7; // feet box
-    return !this.solidAt(x - hw, y) && !this.solidAt(x + hw, y) &&
-           !this.solidAt(x - hw, y - hh) && !this.solidAt(x + hw, y - hh) &&
-           !this.solidAt(x, y + 2);
+    const hw = 12, top = y + FEET - 9, bot = y + FEET + 2;
+    return !this.solidAt(x - hw, top) && !this.solidAt(x + hw, top) &&
+           !this.solidAt(x - hw, bot) && !this.solidAt(x + hw, bot);
   }
 
   onWater() {
-    return this.map.grid[Math.floor(this.py / CELL)]?.[Math.floor(this.px / CELL)] === '~';
+    return this.map.grid[Math.floor((this.py + FEET) / CELL)]?.[Math.floor(this.px / CELL)] === '~';
+  }
+
+  // enemies stand on one point at their visible feet; water enemies stay on
+  // water instead of ignoring walls (they used to wander straight onto land)
+  enemyCanStand(e, x, y) {
+    const c = this.map.grid[Math.floor((y + ENEMY_FEET) / CELL)]?.[Math.floor(x / CELL)];
+    return e.water ? c === '~' : !this.solidAt(x, y + ENEMY_FEET);
   }
 
   runStory(id) {
@@ -168,6 +183,19 @@ export class OverworldScene {
       G.pos = { x: this.px, y: this.py };
     }
 
+    // brush past folk instead of walking through them: a gentle push-out,
+    // capped far below walk speed so it can never block a path or trap
+    for (const e of this.entities) {
+      if (e.type !== 'npc' || !e.spr || !this.entityActive(e)) continue;
+      const ox = this.px - e.x, oy = this.py - e.y;
+      const d = Math.hypot(ox, oy), r = e.big ? 44 : 30;
+      if (d > 0.001 && d < r) {
+        const push = Math.min(60 * dt, r - d);
+        const nx = this.px + ox / d * push, ny = this.py + oy / d * push;
+        if (this.boxFree(nx, ny)) { this.px = nx; this.py = ny; G.pos = { x: this.px, y: this.py }; }
+      }
+    }
+
     // triggers & doors (walk-on)
     for (const e of this.entities) {
       if (e.dead) continue;
@@ -184,8 +212,12 @@ export class OverworldScene {
         if (e.hidden && !this.condMet(e.cond)) continue;
         if (Math.abs(this.px - e.x) < (e.w || 64) / 2 && Math.abs(this.py - e.y) < (e.h || 64) / 2) {
           if (e.cond && !this.condMet(e.cond)) {
-            // bounce back and explain
-            this.py += this.py > e.y ? 26 : -26;
+            // bounce back and explain — only onto free ground (an unchecked
+            // bounce could shove the player inside a wall: permanent stuck)
+            const away = this.py > e.y ? 26 : -26;
+            for (const [bx, by] of [[0, away], [0, away * 2], [0, -away], [26, 0], [-26, 0]]) {
+              if (this.boxFree(this.px + bx, this.py + by)) { this.px += bx; this.py += by; break; }
+            }
             if (e.locked) this.runStory(e.locked);
             return;
           }
@@ -220,7 +252,7 @@ export class OverworldScene {
         const sp = 55 * dt;
         const nx = e.x + (this.px - e.x) / dPlayer * sp;
         const ny = e.y + (this.py - e.y) / dPlayer * sp;
-        if (!this.solidAt(nx, ny) || (e.water && this.map.grid[Math.floor(ny / CELL)]?.[Math.floor(nx / CELL)] === '~')) { e.x = nx; e.y = ny; }
+        if (this.enemyCanStand(e, nx, ny)) { e.x = nx; e.y = ny; }
       } else {
         e.wanderT -= dt;
         if (e.wanderT <= 0) {
@@ -233,7 +265,7 @@ export class OverworldScene {
           if (d > 4) {
             const sp = 30 * dt;
             const nx = e.x + (e.tx - e.x) / d * sp, ny = e.y + (e.ty - e.y) / d * sp;
-            if (!this.solidAt(nx, ny) || e.water) { e.x = nx; e.y = ny; }
+            if (this.enemyCanStand(e, nx, ny)) { e.x = nx; e.y = ny; }
           }
         }
       }
@@ -282,7 +314,7 @@ export class OverworldScene {
     if (!a) return;
     const h = hTarget, w = h * (a.w / a.h);
     ctx.save();
-    if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
+    if (opts.alpha != null) ctx.globalAlpha *= opts.alpha;
     if (opts.flip) { ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
     if (opts.rot) { ctx.translate(x, y); ctx.rotate(opts.rot); ctx.translate(-x, -y); }
     ctx.drawImage(a.el, x - w / 2, y - h, w, h);
@@ -430,6 +462,10 @@ export class OverworldScene {
           ctx.strokeRect(e.x - (e.w || 64) / 2 - cx, e.y - (e.h || 64) / 2 - cy, e.w || 64, e.h || 64);
         }
       }
+      // the player's actual feet box, where collision is sampled
+      ctx.strokeStyle = '#ffe94a';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(this.px - 12 - cx, this.py + FEET - 9 - cy, 24, 11);
       ctx.fillStyle = '#fff';
       ctx.fillText(`${Math.round(this.px)},${Math.round(this.py)} cell ${Math.floor(this.px / 32)},${Math.floor(this.py / 32)}`, 8, H - 8);
       ctx.restore();

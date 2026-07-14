@@ -26,6 +26,24 @@ const CARD_W = 296, CARD_H = 118, CARD_Y = 508;
 const MOOD_COLOR = { sunny: '#e0a33b', stormy: '#5a6b9e', misty: '#7fa3a8' };
 const MOOD_LABEL = { sunny: 'SUNNY', stormy: 'STORMY', misty: 'MISTY' };
 
+// Scratch canvas for the hit flash. source-atop on the main canvas would
+// whiten the whole bounding RECT (the backdrop under the sprite is opaque);
+// the white must be masked by the sprite's own alpha on an offscreen first.
+let flashScratch = null;
+function whiteSilhouette(el, w, h) {
+  const c = flashScratch ??= document.createElement('canvas');
+  if (c.width < w) c.width = w;
+  if (c.height < h) c.height = h;
+  const x = c.getContext('2d');
+  x.clearRect(0, 0, c.width, c.height);
+  x.drawImage(el, 0, 0, w, h);
+  x.globalCompositeOperation = 'source-in';
+  x.fillStyle = '#ffffff';
+  x.fillRect(0, 0, w, h);
+  x.globalCompositeOperation = 'source-over';
+  return c;
+}
+
 // The Fog, phase 2: not a fight — an answering. Four rounds, no damage dealt
 // or dealable; the party fades and is reminded back.
 const RITUAL = [
@@ -555,10 +573,9 @@ export class BattleScene {
       ctx.globalAlpha = alpha;
       ctx.drawImage(a.el, x - wDraw / 2 + dx, y - hDraw + bob + dy, wDraw, hDraw);
       if (f.flash > 0) {
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.globalAlpha = Math.min(0.85, f.flash * 4);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x - wDraw / 2 + dx, y - hDraw + bob + dy, wDraw, hDraw);
+        const sil = whiteSilhouette(a.el, a.w, a.h);
+        ctx.globalAlpha = alpha * Math.min(0.85, f.flash * 4);
+        ctx.drawImage(sil, 0, 0, a.w, a.h, x - wDraw / 2 + dx, y - hDraw + bob + dy, wDraw, hDraw);
       }
       ctx.restore();
       // mood ring + hp sliver

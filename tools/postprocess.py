@@ -33,60 +33,67 @@ RULES = [
 ]
 
 
-def key_magenta(im):
-    """Background magenta → transparent. Flood-fills from the borders so only
-    background-CONNECTED magenta is removed — interior pixels that merely lean
-    magenta (red coats, pink cheeks) stay opaque."""
-    a = np.asarray(im.convert('RGBA')).astype(np.int16)
-    r, g, b = a[..., 0], a[..., 1], a[..., 2]
-    dist = np.sqrt((r - 255) ** 2 + g ** 2 + (b - 255) ** 2)
-    magenta_ish = dist < 135  # generous: candidates only; connectivity decides
-    h, w = magenta_ish.shape
-    bg = np.zeros((h, w), dtype=bool)
-    # seed from all border pixels that are magenta-ish, then grow (vectorized BFS)
-    seeds = np.zeros_like(bg)
-    seeds[0, :] = seeds[-1, :] = seeds[:, 0] = seeds[:, -1] = True
-    frontier = seeds & magenta_ish
-    bg |= frontier
+def flood(seeds, allowed):
+    """Grow a seed mask through an allowed mask (4-connected, vectorized BFS)."""
+    out = seeds & allowed
+    frontier = out.copy()
     while frontier.any():
-        grown = np.zeros_like(bg)
+        grown = np.zeros_like(out)
         grown[1:, :] |= frontier[:-1, :]
         grown[:-1, :] |= frontier[1:, :]
         grown[:, 1:] |= frontier[:, :-1]
         grown[:, :-1] |= frontier[:, 1:]
-        frontier = grown & magenta_ish & ~bg
-        bg |= frontier
+        frontier = grown & allowed & ~out
+        out |= frontier
+    return out
+
+
+def key_magenta(im):
+    """Background magenta → transparent.
+
+    Two kinds of background: border-connected magenta, and ENCLOSED magenta
+    (holes between limbs, gaps in hanging threads) which the border flood
+    can never reach — those used to ship as opaque #FF00FF blobs. Any region
+    anchored by strongly-magenta pixels is background. Interior pixels that
+    merely lean magenta (red coats, pink cheeks) are neither border-connected
+    nor strongly magenta, so they stay opaque."""
+    a = np.asarray(im.convert('RGBA')).astype(np.int32)  # int16 overflows the squares
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    dist = np.sqrt((r - 255.0) ** 2 + g ** 2 + (b - 255.0) ** 2)
+    magenta_ish = dist < 135  # generous growth region: soft/antialiased edges
+    strong = dist < 110       # unmistakably background-colored
+
+    border = np.zeros_like(magenta_ish)
+    border[0, :] = border[-1, :] = border[:, 0] = border[:, -1] = True
+    bg = flood(border, magenta_ish)
+    bg |= flood(strong & ~bg, magenta_ish)  # enclosed holes
+
     alpha = a[..., 3].copy()
     alpha[bg] = 0
-    # fill ENCLOSED transparent pockets: transparent regions that never touch
-    # the border are character interior (magenta-tinted shading the model baked
-    # in) — restore them opaque; the despill below neutralizes their tint.
-    transparent = alpha < 200
-    outside = np.zeros_like(transparent)
-    frontier = np.zeros_like(transparent)
-    frontier[0, :] = frontier[-1, :] = frontier[:, 0] = frontier[:, -1] = True
-    frontier &= transparent
-    outside |= frontier
-    while frontier.any():
-        grown = np.zeros_like(outside)
-        grown[1:, :] |= frontier[:-1, :]
-        grown[:-1, :] |= frontier[1:, :]
-        grown[:, 1:] |= frontier[:, :-1]
-        grown[:, :-1] |= frontier[:, 1:]
-        frontier = grown & transparent & ~outside
-        outside |= frontier
-    pockets = transparent & ~outside
-    alpha[pockets] = 255
     # soft edge: feather the cut
     am = Image.fromarray(alpha.astype(np.uint8), 'L').filter(ImageFilter.GaussianBlur(1.1))
-    alpha = np.asarray(am).astype(np.int16)
-    # despill: magenta-cast pixels near the edge (and restored pockets) get
-    # pulled to neutral
-    edge = ((alpha > 0) & (alpha < 250)) | pockets
-    cast = edge & (r > g + 40) & (b > g + 40)
-    lum = (0.4 * r + 0.4 * g + 0.2 * b).astype(np.int16)
-    for ch, arr in ((0, r), (2, b)):
-        a[..., ch] = np.where(cast, (arr * 0.35 + lum * 0.65).astype(np.int16), arr)
+    alpha = np.asarray(am).astype(np.int32)
+
+    # despill on ALL channels: r/b-only correction turns (255,0,255) into a
+    # still-purple (188,0,188) because g never rises toward the luminance
+    cast = (alpha > 0) & (alpha < 250) & (r > g + 40) & (b > g + 40)
+    lum = (0.4 * r + 0.4 * g + 0.2 * b).astype(np.int32)
+    for ch, arr in ((0, r), (1, g), (2, b)):
+        a[..., ch] = np.where(cast, (arr * 0.35 + lum * 0.65).astype(np.int32), arr)
+
+    # decontaminate: feathered/edge pixels keep magenta-mixed RGB that bleeds
+    # back in when the sprite is scaled; extend nearby solid color into them
+    # (blurs run in 0-255 L mode: this PIL build can't blur 'F' images)
+    blur_f = lambda arr, rad: np.asarray(
+        Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'L')
+        .filter(ImageFilter.GaussianBlur(rad))).astype(np.float32)
+    solid = (alpha >= 250).astype(np.float32)
+    den = blur_f(solid * 255.0, 4) / 255.0
+    fill = (alpha < 250) & (den > 0.02)
+    for ch in (0, 1, 2):
+        ext = blur_f(a[..., ch] * solid, 4) / np.maximum(den, 1e-4)
+        a[..., ch] = np.where(fill, ext, a[..., ch]).astype(np.int32)
+
     a[..., 3] = alpha
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
 
