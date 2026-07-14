@@ -14,6 +14,7 @@ THE LAST STITCH — a short story-driven JRPG (HTML5 canvas, vanilla ES modules,
 
 node tests/battle.test.mjs      # combat logic unit tests
 node tests/content.test.mjs     # cross-reference lint (story/maps/assets/music ids)
+node tests/geometry.test.mjs    # map geometry + BFS reachability of every interactable
 node tests/transition.test.mjs  # scene-transition re-entrancy (real Game class)
 node tests/playthrough.mjs      # headless full-game story traversal
 node tests/sim.mjs [runs]       # monte-carlo balance report (tune src/data/balance.js)

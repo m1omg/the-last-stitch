@@ -25,18 +25,18 @@ __COTTAGE__
 export const MAPS = {
   // ——— real world, night ———
   cottage: {
-    id: 'cottage', name: "Nana's Cottage", img: 'map_cottage', music: 'mus_cottage',
+    id: 'cottage', name: "Nana's Cottage", img: 'map_cottage', music: 'mus_cottage', real: true,
     grid: COTTAGE_GRID,
     spawn: px(22, 22),
     entities: [
       { type: 'npc', id: 'mum', spr: 'spr_mum', ...px(38, 15), talk: 'mum_night', size: 118 },
-      { type: 'npc', id: 'nana', spr: 'spr_nana', ...px(30, 17), talk: 'nana_night', big: true, size: 128 },
+      { type: 'npc', id: 'nana', spr: 'spr_nana', x: 984, y: 512, talk: 'nana_night', big: true, size: 128 },
       { type: 'poi', id: 'radio', ...px(35, 18), talk: 'radio', big: true },
       { type: 'poi', id: 'photo', ...px(19, 10), talk: 'photo_shelf', big: true },
       { type: 'poi', id: 'mantel', ...px(25, 11), talk: 'mantel', big: true },
       { type: 'poi', id: 'bed', ...px(12, 19), talk: 'bed' },
       { type: 'poi', id: 'quilt', ...px(15, 19), talk: 'quilt_look' },
-      { type: 'poi', id: 'front_door', ...px(41, 23), talk: 'front_door', big: true },
+      { type: 'poi', id: 'front_door', x: 1248, y: 792, talk: 'front_door', big: true },
       { type: 'poi', id: 'kitchen', ...px(40, 13), talk: 'kitchen_look' },
       { type: 'poi', id: 'dresser', ...px(44, 15), talk: 'dresser_look', big: true },
     ],
@@ -44,13 +44,13 @@ export const MAPS = {
 
   // ——— real world, morning (ending) ———
   cottage_morning: {
-    id: 'cottage_morning', name: 'Morning', img: 'map_cottage_morning', music: 'mus_cottage',
+    id: 'cottage_morning', name: 'Morning', img: 'map_cottage_morning', music: 'mus_cottage', real: true,
     grid: COTTAGE_GRID,
     spawn: px(22, 22),
     entities: [
       { type: 'npc', id: 'mum2', spr: 'spr_mum', ...px(38, 15), talk: 'mum_morning', size: 118 },
-      { type: 'npc', id: 'nana2', spr: 'spr_nana', ...px(30, 17), talk: 'nana_morning', big: true, size: 128 },
-      { type: 'poi', id: 'front_door2', ...px(41, 23), talk: 'front_door_morning', big: true },
+      { type: 'npc', id: 'nana2', spr: 'spr_nana', x: 984, y: 512, talk: 'nana_morning', big: true, size: 128 },
+      { type: 'poi', id: 'front_door2', x: 1248, y: 792, talk: 'front_door_morning', big: true },
       { type: 'poi', id: 'kitchen2', ...px(40, 13), talk: 'kitchen_look' },
       { type: 'poi', id: 'dresser2', ...px(44, 15), talk: 'dresser_look', big: true },
     ],

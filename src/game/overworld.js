@@ -358,7 +358,8 @@ export class OverworldScene {
           ctx.fillRect(gx - 70, gy - 90, 140, 150);
         } });
       } else if ((e.type === 'npc' || e.type === 'poi') && e.spr && this.entityActive(e) && this.condMet(e.cond)) {
-        const bob = e.type === 'npc' ? Math.sin(this.t * 2.2 + e.x * 0.07) * 2.5 : 0;
+        // the Patchwork's toy-folk bob gently; real people stand/sit still
+        const bob = e.type === 'npc' && !this.map.real ? Math.sin(this.t * 2.2 + e.x * 0.07) * 2.5 : 0;
         draws.push({ y: e.y, f: () => this.drawSprite(ctx, e.spr, e.x - cx, e.y - cy + 30 + bob, e.size || (e.big ? 118 : 88)) });
       } else if (e.type === 'enemy') {
         const eimg = ENCOUNTERS[e.encounter]?.[0];
