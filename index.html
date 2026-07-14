@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THE LAST STITCH</title>
+<style>
+  @font-face { font-family: 'Patrick Hand'; src: url('assets/fonts/PatrickHand-Regular.ttf') format('truetype'); }
+  @font-face { font-family: 'Rock Salt';    src: url('assets/fonts/RockSalt-Regular.ttf')    format('truetype'); }
+  html, body { margin: 0; padding: 0; height: 100%; background: #0b0a09; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas#game {
+    width: min(100vw, calc(100vh * 1.5));
+    height: min(100vh, calc(100vw / 1.5));
+    image-rendering: auto;
+    outline: none;
+  }
+  #preload { position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+</style>
+</head>
+<body>
+<canvas id="game" width="960" height="640"></canvas>
+<div id="preload" aria-hidden="true"></div>
+<script>
+  // paint uncaught errors onto the canvas so headless screenshots reveal them
+  addEventListener('error', (e) => {
+    try {
+      const c = document.getElementById('game').getContext('2d');
+      c.fillStyle = '#300'; c.fillRect(0, 0, 960, 640);
+      c.fillStyle = '#fff'; c.font = '16px monospace';
+      const msg = `${e.message} @ ${(e.filename || '').split('/').pop()}:${e.lineno}`;
+      for (let i = 0; i < msg.length; i += 90) c.fillText(msg.slice(i, i + 90), 20, 60 + (i / 90) * 24);
+    } catch {}
+  });
+  addEventListener('unhandledrejection', (e) => {
+    dispatchEvent(new ErrorEvent('error', { message: String(e.reason?.stack || e.reason) }));
+  });
+</script>
+<script type="module" src="src/game/main.js"></script>
+</body>
+</html>

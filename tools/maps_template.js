@@ -1,0 +1,182 @@
+// Map definitions. Each map is one painted 1536×1024 backdrop plus a 48×32
+// ASCII collision grid (32px cells) and an entity list. Grids and entity
+// positions are reconciled against the generated art via tools/gridfit.py;
+// this file is REGENERATED from tools/maps_template.js by the build snippet in
+// the tools — edit the template, not the grids, for structural changes.
+//
+// Legend: # wall/solid · . walkable · ~ water (walkable only when map.boat)
+// Entity coords are in world pixels (cell*32+16 for centers).
+
+const px = (cx, cy) => ({ x: cx * 32 + 16, y: cy * 32 + 16 });
+
+// helper: build a 48×32 grid from row strings (must be 48 chars each)
+function grid(rows) {
+  if (rows.length !== 32) throw new Error(`grid needs 32 rows, got ${rows.length}`);
+  for (const r of rows) if (r.length !== 48) throw new Error(`row length ${r.length} ≠ 48: "${r}"`);
+  return rows;
+}
+
+// Nana's cottage: bed left, fireplace top-center, armchair + radio table right
+// of center, kitchen upper-right. Floor opens up below row 20.
+const COTTAGE_GRID = grid([
+__COTTAGE__
+]);
+
+export const MAPS = {
+  // ——— real world, night ———
+  cottage: {
+    id: 'cottage', name: "Nana's Cottage", img: 'map_cottage', music: 'mus_cottage',
+    grid: COTTAGE_GRID,
+    spawn: px(22, 22),
+    entities: [
+      { type: 'npc', id: 'mum', spr: 'spr_mum', ...px(38, 15), talk: 'mum_night', size: 118 },
+      { type: 'npc', id: 'nana', spr: 'spr_nana', ...px(30, 17), talk: 'nana_night', big: true, size: 128 },
+      { type: 'poi', id: 'radio', ...px(35, 18), talk: 'radio', big: true },
+      { type: 'poi', id: 'photo', ...px(19, 10), talk: 'photo_shelf', big: true },
+      { type: 'poi', id: 'mantel', ...px(25, 11), talk: 'mantel', big: true },
+      { type: 'poi', id: 'bed', ...px(12, 19), talk: 'bed' },
+      { type: 'poi', id: 'quilt', ...px(15, 19), talk: 'quilt_look' },
+      { type: 'poi', id: 'front_door', ...px(41, 23), talk: 'front_door', big: true },
+      { type: 'poi', id: 'kitchen', ...px(40, 13), talk: 'kitchen_look' },
+      { type: 'poi', id: 'dresser', ...px(44, 15), talk: 'dresser_look', big: true },
+    ],
+  },
+
+  // ——— real world, morning (ending) ———
+  cottage_morning: {
+    id: 'cottage_morning', name: 'Morning', img: 'map_cottage_morning', music: 'mus_cottage',
+    grid: COTTAGE_GRID,
+    spawn: px(22, 22),
+    entities: [
+      { type: 'npc', id: 'mum2', spr: 'spr_mum', ...px(38, 15), talk: 'mum_morning', size: 118 },
+      { type: 'npc', id: 'nana2', spr: 'spr_nana', ...px(30, 17), talk: 'nana_morning', big: true, size: 128 },
+      { type: 'poi', id: 'front_door2', ...px(41, 23), talk: 'front_door_morning', big: true },
+      { type: 'poi', id: 'kitchen2', ...px(40, 13), talk: 'kitchen_look' },
+      { type: 'poi', id: 'dresser2', ...px(44, 15), talk: 'dresser_look', big: true },
+    ],
+  },
+
+  // ——— the Patchwork hub ———
+  // Lighthouse on its knoll top-center (steps 23-25), Thimble's stall left,
+  // plaza with the painted picnic quilt (save), orchard path exits the right
+  // edge, stone pier bottom-center into the quilted sea.
+  harbor: {
+    id: 'harbor', name: 'Harbour of Buttons', img: 'map_harbor', music: 'mus_harbor',
+    grid: grid([
+__HARBOR__
+    ]),
+    spawn: px(24, 18),
+    entities: [
+      { type: 'door', ...px(24, 11), w: 96, h: 80, to: { map: 'lighthouse' }, cond: 'threads3', locked: 'lighthouse_locked' },
+      { type: 'door', ...px(47, 9), w: 64, h: 128, to: { map: 'orchard' } },
+      { type: 'door', ...px(23, 30), w: 240, h: 72, to: { map: 'sea' }, cond: 'captain_joined', locked: 'sea_locked' },
+      { type: 'door', ...px(9, 13), w: 76, h: 110, to: { map: 'whiterooms' }, cond: 'white_door', hidden: true },
+      { type: 'save', ...px(21, 15) },
+      { type: 'npc', id: 'thimble', spr: 'spr_thimble', ...px(10, 16), talk: 'shop', shop: true },
+      { type: 'npc', id: 'folk_a', spr: 'spr_folk_a', ...px(30, 13), talk: 'folk_a' },
+      { type: 'npc', id: 'folk_b', spr: 'spr_folk_b', ...px(18, 20), talk: 'folk_b' },
+      { type: 'npc', id: 'postmoth', spr: 'spr_postmoth', ...px(33, 19), talk: 'postmoth' },
+      { type: 'npc', id: 'hollow1', spr: 'spr_hollow', ...px(15, 11), talk: 'hollow_harbor', cond: 'orchard_done' },
+      { type: 'npc', id: 'captain_npc', spr: 'spr_captain_front', ...px(24, 13), talk: 'captain_harbor', cond: '!captain_joined' },
+      { type: 'trigger', id: 'white_door_appears', ...px(24, 16), w: 500, h: 200, once: true, cond: 'threads2', script: 'white_door_appears' },
+      { type: 'trigger', id: 'harbor_first', ...px(24, 18), w: 380, h: 200, once: true, script: 'harbor_first' },
+      { type: 'trigger', id: 'captain_joins', ...px(24, 17), w: 640, h: 280, once: true, cond: 'orchard_done,!captain_joined', script: 'captain_joins' },
+    ],
+  },
+
+  // ——— Area 1: Orchard of Hums ———
+  // Path from the bottom-left gate winds to the hilltop clearing beneath the
+  // grand tree; tree clumps block; the tea table for two sits middle-right.
+  orchard: {
+    id: 'orchard', name: 'Orchard of Hums', img: 'map_orchard', music: 'mus_orchard',
+    battleBg: 'bbg_orchard',
+    grid: grid([
+__ORCHARD__
+    ]),
+    spawn: px(11, 26),
+    entities: [
+      { type: 'door', ...px(10, 29), w: 150, h: 80, to: { map: 'harbor', x: 44 * 32, y: 9 * 32 } },
+      { type: 'save', ...px(7, 20) },
+      { type: 'enemy', ...px(20, 22), encounter: 'orchard_easy', radius: 120 },
+      { type: 'enemy', ...px(33, 25), encounter: 'orchard_pair', radius: 140 },
+      { type: 'enemy', ...px(18, 12), encounter: 'orchard_pair', radius: 100 },
+      { type: 'enemy', ...px(36, 16), encounter: 'orchard_mixed', radius: 110 },
+      { type: 'enemy', ...px(28, 9), encounter: 'orchard_sock', radius: 130 },
+      { type: 'poi', id: 'coat_table', spr: 'spr_coat', ...px(37, 22), talk: 'coat_table', big: true },
+      { type: 'item', ...px(6, 21), itemId: 'biscuit', n: 2, flag: 'orchard_biscuits' },
+      { type: 'item', ...px(40, 19), itemId: 'honeydrop', n: 1, flag: 'orchard_honey' },
+      { type: 'npc', id: 'beefolk', spr: 'spr_folk_b', ...px(24, 17), talk: 'beefolk' },
+      { type: 'trigger', id: 'orchard_boss', ...px(25, 6), w: 420, h: 130, once: true, cond: '!orchard_done', script: 'orchard_boss' },
+      { type: 'poi', id: 'sun_thread', ...px(25, 5), talk: 'take_sun_thread', cond: 'orchard_boss_won,!thread_sun', sparkle: true },
+    ],
+  },
+
+  // ——— Area 2: the Quilted Sea ———
+  // Dock isle upper-left, pincushion isle mid-left (save), hollow-folk isle
+  // lower-left, the great knot isle right (boss), whale constellation above.
+  sea: {
+    id: 'sea', name: 'The Quilted Sea', img: 'map_sea', music: 'mus_sea',
+    battleBg: 'bbg_sea', boat: true,
+    grid: grid([
+__SEA__
+    ]),
+    spawn: px(7, 7),
+    entities: [
+      { type: 'door', ...px(6, 2), w: 180, h: 70, to: { map: 'harbor', x: 23 * 32, y: 28 * 32 } },
+      { type: 'save', ...px(15, 12) },
+      { type: 'enemy', ...px(12, 8), encounter: 'sea_pup', radius: 160, water: true },
+      { type: 'enemy', ...px(26, 12), encounter: 'sea_pair', radius: 170, water: true },
+      { type: 'enemy', ...px(10, 16), encounter: 'sea_whistler', radius: 160, water: true },
+      { type: 'enemy', ...px(26, 22), encounter: 'sea_pair', radius: 170, water: true },
+      { type: 'npc', id: 'hollow_isle', spr: 'spr_hollow', ...px(6, 20), talk: 'hollow_isle' },
+      { type: 'poi', id: 'whale', ...px(34, 8), talk: 'whale_stars', big: true },
+      { type: 'item', ...px(7, 22), itemId: 'tea', n: 2, flag: 'sea_tea' },
+      { type: 'trigger', id: 'sea_boss', ...px(36, 23), w: 280, h: 170, once: true, cond: '!sea_done', script: 'sea_boss' },
+      { type: 'poi', id: 'storm_thread', ...px(35, 21), talk: 'take_storm_thread', cond: 'sea_boss_won,!thread_storm', sparkle: true },
+    ],
+  },
+
+  // ——— Area 3: the White Rooms ———
+  // Fog-bleached cutaway cottage: living room + photo wall upper-left, nursery
+  // with the cot upper-middle, landing upper-right, the long hallway, a small
+  // parlour lower-left (save), the bedroom lower-right (mist thread).
+  whiterooms: {
+    id: 'whiterooms', name: 'The White Rooms', img: 'map_whiterooms', music: 'mus_white',
+    battleBg: 'bbg_white', faded: true,
+    grid: grid([
+__WHITE__
+    ]),
+    spawn: px(18, 28),
+    entities: [
+      { type: 'door', ...px(18, 30), w: 140, h: 70, to: { map: 'harbor', x: 12 * 32, y: 15 * 32 } },
+      { type: 'save', ...px(9, 24) },
+      { type: 'trigger', id: 'white_enter', ...px(18, 26), w: 220, h: 220, once: true, script: 'white_enter' },
+      { type: 'enemy', ...px(26, 22), encounter: 'white_unraveler', radius: 130 },
+      { type: 'enemy', ...px(10, 14), encounter: 'white_pair', radius: 140 },
+      { type: 'enemy', ...px(38, 16), encounter: 'white_pair', radius: 140 },
+      { type: 'enemy', ...px(40, 24), encounter: 'white_trio', radius: 150 },
+      { type: 'poi', id: 'photowall', ...px(9, 4), talk: 'photowall', sparkle: true },
+      { type: 'poi', id: 'nursery', ...px(24, 8), talk: 'nursery', sparkle: true, cond: 'photowall_seen' },
+      { type: 'npc', id: 'hollow_white', spr: 'spr_hollow', ...px(20, 16), talk: 'hollow_white' },
+      { type: 'poi', id: 'mist_thread', ...px(40, 26), talk: 'take_mist_thread', cond: 'nursery_seen,!thread_mist', sparkle: true },
+    ],
+  },
+
+  // ——— finale: the Lighthouse ———
+  // Cutaway tower: entrance lower-left, the tall shaft of switchback stairs,
+  // the lamp room at the very top.
+  lighthouse: {
+    id: 'lighthouse', name: 'The Lighthouse', img: 'map_lighthouse', music: 'mus_white',
+    battleBg: 'bbg_fog',
+    grid: grid([
+__LIGHTHOUSE__
+    ]),
+    spawn: px(22, 27),
+    entities: [
+      { type: 'door', ...px(18, 29), w: 150, h: 70, to: { map: 'harbor', x: 24 * 32, y: 14 * 32 } },
+      { type: 'save', ...px(23, 26) },
+      { type: 'trigger', id: 'lighthouse_enter', ...px(20, 27), w: 320, h: 130, once: true, script: 'lighthouse_enter' },
+      { type: 'trigger', id: 'fog_fight', ...px(22, 3), w: 280, h: 150, once: true, cond: '!fog_done', script: 'fog_fight' },
+    ],
+  },
+};
